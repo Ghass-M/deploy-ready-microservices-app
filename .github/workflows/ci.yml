@@ -20,18 +20,20 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Build project
+      - name: Build adservice
+        working-directory: ./src/adservice
         run: ./gradlew build
-
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v5.0.0
+      
+      - name: SonarCloud Scan for adservice
+        working-directory: ./src/adservice
+        uses: SonarSource/sonarcloud-github-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=Ghass-M_deploy-ready-microservices-app
+            -Dsonar.projectKey=deploy-ready-microservices-app-adservice
             -Dsonar.organization=ghass-m
-            -Dsonar.sources=./src
+            -Dsonar.sources=src/main/java
             -Dsonar.java.binaries=build/classes/java/main
 
   
