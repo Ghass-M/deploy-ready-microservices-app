@@ -25,7 +25,8 @@ jobs:
           path: ~/.sonar/cache
           key: ${{ runner.os }}-sonar
           restore-keys: ${{ runner.os }}-sonar
-
+      - name: Ensure gradlew is executable
+        run: chmod +x ./gradlew
       - name: Run SonarQube Scanner
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
