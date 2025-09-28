@@ -1,9 +1,9 @@
 name: CI Pipeline
 on:
   push:
-    branches: main
+    branches: [main]
   pull_request:
-    branches: main
+    branches: [main]
 
 jobs:
   sonarcloud: 
@@ -15,26 +15,26 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Java
-        uses: actions/setup-java@v5.0.0
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: 17
 
+      # Build adservice (Gradle)
       - name: Build adservice
         working-directory: ./src/adservice
         run: ./gradlew build
-      
-      - name: SonarCloud Scan for adservice
-        working-directory: ./src/adservice
+
+      # (Optional) build other services if needed, e.g. npm/yarn for frontend, etc.
+
+      - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=deploy-ready-microservices-app-adservice
+            -Dsonar.projectKey=deploy-ready-microservices-app
             -Dsonar.organization=ghass-m
-            -Dsonar.sources=src/main/java
-            -Dsonar.java.binaries=build/classes/java/main
 
   
   docker-build:
