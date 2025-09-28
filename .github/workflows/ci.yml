@@ -6,102 +6,26 @@ on:
     branches: main
 
 jobs:
-  sonarqube:
-    name: SonarQube Scan (with exposed UI via ngrok — demo only)
+  sonarcloud: 
+    name: Build and Analyze
     runs-on: ubuntu-latest
-    services:
-      sonarqube:
-        image: sonarqube:lts
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/api/system/health || exit 1"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 12
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
-      - name: Install prerequisites
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y unzip jq curl
-
-      - name: Wait for SonarQube to become healthy
-        run: |
-          echo "Waiting for SonarQube to be UP..."
-          for i in $(seq 1 60); do
-            status=$(curl -sS http://127.0.0.1:9000/api/system/health || true)
-            echo "attempt $i: $status"
-            if echo "$status" | grep -q '"status":"UP"'; then
-              echo "SonarQube is UP"
-              break
-            fi
-            sleep 5
-          done
-
-      - name: Download and set up SonarScanner CLI
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v5.0.0
         env:
-          SCANNER_VER: 4.9.0.2856
-        run: |
-          curl -sSLo scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SCANNER_VER}-linux.zip
-          unzip -q scanner.zip -d $HOME/sonar
-          export PATH="$HOME/sonar/sonar-scanner-${SCANNER_VER}-linux/bin:$PATH"
-          echo "$HOME/sonar/sonar-scanner-${SCANNER_VER}-linux/bin" >> $GITHUB_PATH
-
-      - name: Run Sonar scan (publishes to local SonarQube)
-        env:
-          SONAR_HOST_URL: http://127.0.0.1:9000
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          # adjust sonar.projectKey or other properties to match your project
-          sonar-scanner \
-            -Dsonar.projectKey=deploy-ready-microservices-app \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN \
-            -Dsonar.sources=./src || true
-
-      - name: Install ngrok
-        env:
-          NGROK_VER: "3.1.0"
-        run: |
-          # use ngrok 3.x binary fetch for linux; adjust if necessary
-          curl -sSLo ngrok.tgz https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.tgz
-          tar xzf ngrok.tgz -C $HOME
-          echo "$HOME" >> $GITHUB_PATH
-
-      - name: Start ngrok to expose SonarQube (background)
-        env:
-          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }} # optional; recommended if you have one
-        run: |
-          if [ -n "$NGROK_AUTHTOKEN" ]; then
-            $HOME/ngrok config add-authtoken $NGROK_AUTHTOKEN || true
-          fi
-          nohup $HOME/ngrok http 9000 --log=stdout > ngrok.log 2>&1 &
-          sleep 2
-          # poll ngrok local API for public URL
-          for i in $(seq 1 20); do
-            url=$(curl -sS http://127.0.0.1:4040/api/tunnels | jq -r '.tunnels[0].public_url' || true)
-            if [ -n "$url" ] && [ "$url" != "null" ]; then
-              echo "NGROK_URL=$url" >> $GITHUB_ENV
-              break
-            fi
-            sleep 2
-          done
-          echo "=== ngrok log (tail) ==="
-          tail -n +1 ngrok.log | sed -n '1,200p'
-
-      - name: Show SonarQube UI URL
-        run: |
-          echo "Open the SonarQube UI (ephemeral): ${{ env.NGROK_URL }}"
-          echo "If empty, check ngrok log above."
-
+        with:
+          projectKey: Ghassen Mastouri
+          organization: ghass-m
+  
   docker-build:
     name: Build & Push Docker Images
     runs-on: ubuntu-latest
-    needs: sonarqube
+    needs: sonarcloud
     strategy:
       matrix:
         service: [ adservice, cartservice, checkoutservice, currencyservice, emailservice, frontend, loadgenerator, paymentservice, productcatalogservice, recommendationserice, shippingservice, shoppingassistantservice]
