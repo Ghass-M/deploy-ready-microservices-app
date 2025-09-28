@@ -20,7 +20,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           args: >
-            -Dsonar.projectKey=deploy-ready-microservices-app
+            -Dsonar.projectKey=Ghass-M_deploy-ready-microservices-app
             -Dsonar.organization=ghass-m
             -Dsonar.sources=./src
   
