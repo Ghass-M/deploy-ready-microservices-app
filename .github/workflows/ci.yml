@@ -23,9 +23,9 @@ jobs:
       # Build adservice (Gradle)
       - name: Build adservice
         working-directory: ./src/adservice
-        run: ./gradlew build
+        run:  chmod +x ./gradlew \
+              && ./gradlew build 
 
-      # (Optional) build other services if needed, e.g. npm/yarn for frontend, etc.
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v5
