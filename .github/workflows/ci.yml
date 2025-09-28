@@ -12,30 +12,12 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Set up JDK 21 (for SonarQube Scanner)
-        uses: actions/setup-java@v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Cache SonarQube packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: ${{ runner.os }}-sonar
-      - name: Ensure gradlew is executable
-        run: chmod +x ./gradlew
+        
       - name: Run SonarQube Scanner
+        uses: SonarSource/sonarqube-scan-action@v6.0.0
         env:
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          ./gradlew sonarqube \
-            -Dsonar.projectKey=deploy-ready-microservices-app \
-            -Dsonar.host.url=$SONAR_HOST_URL \
-            -Dsonar.login=$SONAR_TOKEN
 
   docker-build:
     name: Build & Push Docker Images
