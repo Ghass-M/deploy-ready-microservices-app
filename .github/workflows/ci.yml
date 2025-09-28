@@ -19,8 +19,10 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          projectKey: ghassen-mastouri
-          organization: ghass-m
+          args: >
+            -Dsonar.projectKey=ghassen-mastouri
+            -Dsonar.organization=ghass-m
+            -Dsonar.sources=./src
   
   docker-build:
     name: Build & Push Docker Images
